@@ -1,0 +1,146 @@
+﻿@page "/usertable"
+
+@using MudBlazor.Entities
+@using MudBlazor.Services
+@using Microsoft.EntityFrameworkCore
+
+@inject IUserService userService
+@inject MudBlazor.ISnackbar snackBar
+@inject MyDbContext dbContext
+
+
+@*
+<style>
+    .button-container {
+        position: fixed;
+        bottom: 20px;
+        right: 210px;
+        z-index: 1000;
+    }
+</style>
+
+
+<MudSimpleTable Style="overflow-x: auto;">
+    <thead>
+        <tr>
+            <td>User Name</td>
+            <td>Email</td>
+            <td>Phone Number</td>
+            <td>Country</td>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in users)
+        {
+            <tr>
+                <td>@user.Username</td>
+                <td>@user.Email</td>
+                <td>@user.PhoneNumber</td>
+                <td>@user.Country</td>
+                <td>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="delete" @onclick="() => DeleteUser(user.Id)"></MudIconButton>
+                </td>
+                <td>
+                    <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" />
+                </td>
+            </tr>
+        }
+    </tbody>
+</MudSimpleTable>
+
+
+<MudContainer Class="button-container">
+    <MudFab Href="add" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Large" />
+</MudContainer>
+*@
+
+<MudCard Elevation="25">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Add / Edit Customers</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudTextField @bind-Value="user.Username" Label="User Name" Variant="Variant.Text" Margin="Margin.Normal"></MudTextField>
+        <MudTextField @bind-Value="user.Email" Label="Email" Variant="Variant.Text" Margin="Margin.Normal"></MudTextField>
+        <MudTextField @bind-Value="user.PhoneNumber" Label="Phone Number" Variant="Variant.Text" Margin="Margin.Normal"></MudTextField>
+        <MudTextField @bind-Value="user.Country" Label="Country" Variant="Variant.Text" Margin="Margin.Normal"></MudTextField>
+        <br />
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="Save">Save Customer</MudButton>
+    </MudCardContent>
+</MudCard>
+<br />
+<MudTable Elevation="25" Items="GetUsers()" Filter="new Func<User, bool>(Search)" @bind-user="user">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Users</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString" Placeholder="Search for Users..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>User Name</MudTh>
+        <MudTh>Email</MudTh>
+        <MudTh>Phone Number</MudTh>
+        <MudTh>Country</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="UserName">@context.Username</MudTd>
+        <MudTd DataLabel="Email">@context.Email</MudTd>
+        <MudTd DataLabel="PhoneNumber">@context.PhoneNumber</MudTd>
+        <MudTd DataLabel="Country">@context.Country</MudTd>
+        <MudTd DataLabel="">
+            <MudFab @onclick="@(()=>Edit(@context.Id))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" />
+            <MudFab @onclick="@(()=>Delete(@context.Id))" Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small" />
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[]{50, 100}" />
+    </PagerContent>
+</MudTable>
+
+@code 
+{
+    private string searchString = "";
+    private User user = new User();
+    private List<User> users = new List<User>();
+    protected override async Task OnInitializedAsync()
+    {
+        GetUsers();
+    }
+
+    private List<User> GetUsers()
+    {
+        users = userService.GetUsers();
+        return users;
+    }
+    
+    private bool Search(User user)
+    {
+        if (string.IsNullOrWhiteSpace(searchString)) return true;
+        if (user.Username.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+            || user.Email.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+            || user.Country.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+        return false;
+    }
+    
+    private void Save()
+    {
+        userService.SaveUser(user);
+        user = new User();
+        snackBar.Add("User Saved.", Severity.Success);
+        GetUsers();
+    }
+    private void Edit(int id)
+    {
+        user = users.FirstOrDefault(c => c.Id == id);
+    }
+    private void Delete(int id)
+    {
+        userService.DeleteUser(id);
+        snackBar.Add("User Deleted.", Severity.Success);
+        GetUsers();
+    } 
+}  
+

@@ -1,0 +1,47 @@
+﻿@page "/add"
+@using FluentValidation
+@using MudBlazor.Entities
+@inject MyDbContext dbContext
+
+<h1>ADD USER</h1>
+
+<MudCard>
+	<MudForm User="@user" >
+		<MudCardContent>
+				<MudTextField @bind-Value="user.Username"                              
+							  For="@(() => user.Username)"
+							  Required="true"
+							  Label="Username" />
+
+				<MudTextField @bind-Value="user.Email"
+							  For="@(() => user.Email)"
+							  Required="true"
+							  Label="Email" />
+
+				<MudTextField @bind-Value="user.PhoneNumber"
+							  For="@(() => user.PhoneNumber)"
+							  Required="true"
+							  Label="Phonenumber" />
+
+				<MudTextField @bind-Value="user.Country"
+							  For="@(() => user.Country)"
+							  Required="true"
+							  Label="Country" />
+        </MudCardContent>
+	</MudForm>
+    <MudCardActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await AddUser())">Submit</MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code 
+{
+    private User user = new User();
+
+     private async Task AddUser()
+    {
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+        user = new User();
+    }
+}
